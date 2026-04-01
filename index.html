@@ -80,20 +80,64 @@
             border-bottom: 3px solid var(--twitch-purple);
         }
 
-        /* Sprachauswahl (Dropdown) */
-        .lang-switch {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            cursor: pointer;
-            outline: none;
-            transition: border-color 0.2s;
+        /* Neues Sprachauswahl-Menü (Globus) */
+        .lang-dropdown {
+            position: relative;
+            display: inline-block;
         }
-        .lang-switch:hover, .lang-switch:focus { border-color: var(--twitch-purple); }
+
+        .lang-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s;
+            outline: none;
+        }
+
+        .lang-btn:hover {
+            color: var(--text-main);
+        }
+
+        /* Das versteckte Menü */
+        .lang-menu {
+            display: none; /* Standardmäßig ausgeblendet */
+            position: absolute;
+            top: 100%;
+            right: -10px; /* Leicht nach rechts eingerückt, damit es unter dem Icon sitzt */
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.6);
+            min-width: 60px;
+            z-index: 200;
+            overflow: hidden;
+            animation: fadeIn 0.2s ease;
+        }
+
+        /* Menü anzeigen, wenn man über den Container fährt */
+        .lang-dropdown:hover .lang-menu {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .lang-option {
+            padding: 10px 15px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .lang-option:hover {
+            background-color: rgba(145, 70, 255, 0.1);
+            color: var(--twitch-purple);
+        }
 
         .hamburger {
             display: none;
@@ -192,13 +236,22 @@
                 <li onclick="switchTab('faq')" id="tab-faq" data-i18n="nav_faq">FAQ</li>
             </ul>
             
-            <select id="langSelect" class="lang-switch" onchange="changeLanguage()">
-                <option value="de">DE</option>
-                <option value="en">EN</option>
-                <option value="fr">FR</option>
-                <option value="es">ES</option>
-                <option value="nl">NL</option>
-            </select>
+            <div class="lang-dropdown">
+                <button class="lang-btn" aria-label="Sprache ändern">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                    </svg>
+                </button>
+                <div class="lang-menu">
+                    <div class="lang-option" onclick="changeLanguage('de')">DE</div>
+                    <div class="lang-option" onclick="changeLanguage('en')">EN</div>
+                    <div class="lang-option" onclick="changeLanguage('fr')">FR</div>
+                    <div class="lang-option" onclick="changeLanguage('es')">ES</div>
+                    <div class="lang-option" onclick="changeLanguage('nl')">NL</div>
+                </div>
+            </div>
             
             <div class="hamburger" onclick="toggleMenu()">&#9776;</div>
         </div>
@@ -425,29 +478,30 @@
         };
 
         /* --- 3. SPRACH-LOGIK --- */
-        function changeLanguage() {
-            const lang = document.getElementById('langSelect').value;
+        function changeLanguage(lang) {
             localStorage.setItem('selectedLang', lang); // Speichert die Wahl des Nutzers
             updateTexts(lang);
+            
+            // Auf mobilen Geräten das Menü kurz ausblenden nach Klick
+            const menu = document.querySelector('.lang-menu');
+            menu.style.display = 'none';
+            setTimeout(() => menu.style.display = '', 100); // Setzt Hover-Regel zurück
         }
 
         function updateTexts(lang) {
             const dict = translations[lang];
-            // Sucht nach allen HTML-Elementen, die das Attribut data-i18n haben
             document.querySelectorAll('[data-i18n]').forEach(element => {
                 const key = element.getAttribute('data-i18n');
                 if(dict[key]) {
                     element.innerHTML = dict[key];
                 }
             });
-            // Update die Sprache im <html lang="..."> Tag (gut für Suchmaschinen)
             document.documentElement.lang = lang;
         }
 
-        // Beim ersten Laden der Seite prüfen, ob schon eine Sprache gespeichert wurde
+        // Beim ersten Laden
         window.onload = () => {
             const savedLang = localStorage.getItem('selectedLang') || 'de';
-            document.getElementById('langSelect').value = savedLang;
             updateTexts(savedLang);
         };
     </script>
